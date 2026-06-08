@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Rock Calculator</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family: Arial, sans-serif;
+
+    background-image: url('CD2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
+    padding:20px;
+    min-height:100vh;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    background:#1e1e1e;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+    color:#ff4d4d;
+}
+
+.section-title{
+    margin-top:20px;
+    margin-bottom:10px;
+    font-size:20px;
+    color:#00ffcc;
+}
+
+details{
+    margin-top:15px;
+}
+
+summary{
+    cursor:pointer;
+    user-select:none;
+    font-weight:bold;
+    list-style:none;
+}
+
+summary::-webkit-details-marker{
+    display:none;
+}
+
+summary::before{
+    content:"▶ ";
+    color:#00ffcc;
+}
+
+details[open] summary::before{
+    content:"▼ ";
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:20px;
+    table-layout:fixed;
+}
+
+th{
+    background:#b71c1c;
+    color:white;
+    padding:12px;
+}
+
+td{
+    border:1px solid #444;
+    padding:12px;
+    text-align:center;
+    background:#2b2b2b;
+    color:white;
+}
+
+input{
+    width:100px;
+    padding:8px;
+    text-align:center;
+    background:#3a3a3a;
+    color:white;
+    border:1px solid #666;
+    border-radius:5px;
+}
+
+input:focus{
+    outline:none;
+    border-color:#ff4d4d;
+}
+
+.total{
+    margin-top:25px;
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+    color:#00ff66;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>⛏️ Red Rock Calculator</h1>
+
+<!-- ================= GEMS ================= -->
+<div class="section-title">💎 GEMS</div>
+
+<table>
+<thead>
+<tr>
+    <th>Item</th>
+    <th>Price</th>
+    <th>Quantity</th>
+    <th>Value</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr><td>Opal</td><td><input id="opalPrice"></td><td><input id="opalQty" value="0"></td><td id="opalTotal">$0</td></tr>
+<tr><td>Emerald</td><td><input id="emeraldPrice"></td><td><input id="emeraldQty" value="0"></td><td id="emeraldTotal">$0</td></tr>
+<tr><td>Sapphire</td><td><input id="sapphirePrice"></td><td><input id="sapphireQty" value="0"></td><td id="sapphireTotal">$0</td></tr>
+<tr><td>Ruby</td><td><input id="rubyPrice"></td><td><input id="rubyQty" value="0"></td><td id="rubyTotal">$0</td></tr>
+<tr><td>Diamond</td><td><input id="diamondPrice"></td><td><input id="diamondQty" value="0"></td><td id="diamondTotal">$0</td></tr>
+<tr><td>Gold Nugget</td><td><input id="goldPrice"></td><td><input id="goldQty" value="0"></td><td id="goldTotal">$0</td></tr>
+
+</tbody>
+</table>
+
+<!-- ================= ORES DROPDOWN ================= -->
+<details id="oresDropdown">
+
+<summary class="section-title">🪨 ORES</summary>
+
+<table>
+<thead>
+<tr>
+    <th>Item</th>
+    <th>Price</th>
+    <th>Quantity</th>
+    <th>Value</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr><td>Iron</td><td><input id="ironPrice"></td><td><input id="ironQty" value="0"></td><td id="ironTotal">$0</td></tr>
+<tr><td>Coal</td><td><input id="coalPrice"></td><td><input id="coalQty" value="0"></td><td id="coalTotal">$0</td></tr>
+<tr><td>Clay</td><td><input id="clayPrice"></td><td><input id="clayQty" value="0"></td><td id="clayTotal">$0</td></tr>
+<tr><td>Copper</td><td><input id="copperPrice"></td><td><input id="copperQty" value="0"></td><td id="copperTotal">$0</td></tr>
+<tr><td>Zinc</td><td><input id="zincPrice"></td><td><input id="zincQty" value="0"></td><td id="zincTotal">$0</td></tr>
+<tr><td>Sulfur</td><td><input id="sulfurPrice"></td><td><input id="sulfurQty" value="0"></td><td id="sulfurTotal">$0</td></tr>
+<tr><td>Nitrite</td><td><input id="nitritePrice"></td><td><input id="nitriteQty" value="0"></td><td id="nitriteTotal">$0</td></tr>
+<tr><td>Limestone</td><td><input id="limestonePrice"></td><td><input id="limestoneQty" value="0"></td><td id="limestoneTotal">$0</td></tr>
+<tr><td>Rock</td><td><input id="rockPrice"></td><td><input id="rockQty" value="0"></td><td id="rockTotal">$0</td></tr>
+<tr><td>Rock Salt</td><td><input id="rocksaltPrice"></td><td><input id="rocksaltQty" value="0"></td><td id="rocksaltTotal">$0</td></tr>
+
+</tbody>
+</table>
+
+</details>
+
+<div class="total" id="grandTotal">
+Total Value: $0
+</div>
+
+</div>
+
+<script>
+
+// ALL ITEMS
+const items = [
+"iron","coal","clay","copper","zinc","sulfur","nitrite","limestone","rock","rocksalt",
+"opal","emerald","sapphire","ruby","diamond","gold"
+];
+
+// CALCULATE EACH ITEM
+function calculateItem(item){
+
+    const price = parseFloat(document.getElementById(item+"Price").value) || 0;
+    const qty = parseFloat(document.getElementById(item+"Qty").value) || 0;
+
+    const total = price * qty;
+
+    document.getElementById(item+"Total").innerText =
+        "$" + total.toLocaleString();
+
+    return total;
+}
+
+// TOTAL
+function calculateTotal(){
+
+    let total = 0;
+
+    items.forEach(i => total += calculateItem(i));
+
+    document.getElementById("grandTotal").innerText =
+        "Total Value: $" + total.toLocaleString();
+}
+
+// SAVE PRICES
+function savePrices(){
+    items.forEach(i => {
+        localStorage.setItem(i+"Price",
+            document.getElementById(i+"Price").value);
+    });
+}
+
+// LOAD PRICES
+function loadPrices(){
+
+    const defaults = {
+        iron:0.10, coal:0.03, clay:0.02, copper:0.15, zinc:0.20,
+        sulfur:0.20, nitrite:0.20, limestone:0,
+        rock:0.01, rocksalt:0.04,
+        opal:0.75, emerald:1.50, sapphire:1.25,
+        ruby:1.75, diamond:3, gold:5
+    };
+
+    items.forEach(i => {
+        document.getElementById(i+"Price").value =
+            localStorage.getItem(i+"Price") || defaults[i];
+    });
+}
+
+// SAVE ORES DROPDOWN OPEN/CLOSE STATE
+function setupOresDropdown(){
+
+    const oresDropdown = document.getElementById("oresDropdown");
+
+    oresDropdown.open =
+        localStorage.getItem("oresOpen") === "true";
+
+    oresDropdown.addEventListener("toggle", () => {
+        localStorage.setItem("oresOpen", oresDropdown.open);
+    });
+}
+
+// INIT
+function init(){
+
+    loadPrices();
+    setupOresDropdown();
+
+    document.querySelectorAll("input").forEach(input => {
+        input.addEventListener("input", () => {
+            savePrices();
+            calculateTotal();
+        });
+    });
+
+    calculateTotal();
+}
+
+window.onload = init;
+
+</script>
+
+</body>
+</html>
