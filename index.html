@@ -48,6 +48,56 @@ h1{
     color:#00ffcc;
 }
 
+.paste-section{
+    margin-bottom:20px;
+}
+
+.paste-section label{
+    display:block;
+    margin-bottom:8px;
+    color:#00ffcc;
+    font-weight:bold;
+}
+
+textarea{
+    width:100%;
+    height:90px;
+    padding:10px;
+    resize:vertical;
+    background:#2b2b2b;
+    color:white;
+    border:1px solid #666;
+    border-radius:6px;
+    margin-bottom:10px;
+}
+
+textarea:focus{
+    outline:none;
+    border-color:#ff4d4d;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    background:#b71c1c;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    background:#d32f2f;
+}
+
+.parse-result{
+    margin-top:10px;
+    color:#ddd;
+    font-size:14px;
+    line-height:1.5;
+}
+
 details{
     margin-top:15px;
 }
@@ -125,10 +175,25 @@ input:focus{
 
 <h1>⛏️ Red Rock Calculator</h1>
 
+<!-- ================= PASTE ITEM LIST ================= -->
+<div class="paste-section">
+    <label for="itemText">📋 Paste Item List</label>
+    <textarea id="itemText" placeholder="Example: 1 gold, 2 opals, 3 diamonds, 4 sapphire, 5 ruby"></textarea>
+    <button onclick="parseItemText()">Read Item List</button>
+    <div class="parse-result" id="parseResult"></div>
+</div>
+
 <!-- ================= GEMS ================= -->
 <div class="section-title">💎 GEMS</div>
 
 <table>
+<colgroup>
+    <col style="width:25%">
+    <col style="width:25%">
+    <col style="width:25%">
+    <col style="width:25%">
+</colgroup>
+
 <thead>
 <tr>
     <th>Item</th>
@@ -156,6 +221,13 @@ input:focus{
 <summary class="section-title">🪨 ORES</summary>
 
 <table>
+<colgroup>
+    <col style="width:25%">
+    <col style="width:25%">
+    <col style="width:25%">
+    <col style="width:25%">
+</colgroup>
+
 <thead>
 <tr>
     <th>Item</th>
@@ -196,6 +268,45 @@ const items = [
 "iron","coal","clay","copper","zinc","sulfur","nitrite","limestone","rock","rocksalt",
 "opal","emerald","sapphire","ruby","diamond","gold"
 ];
+
+const itemDisplayNames = {
+    iron:"Iron",
+    coal:"Coal",
+    clay:"Clay",
+    copper:"Copper",
+    zinc:"Zinc",
+    sulfur:"Sulfur",
+    nitrite:"Nitrite",
+    limestone:"Limestone",
+    rock:"Rock",
+    rocksalt:"Rock Salt",
+    opal:"Opal",
+    emerald:"Emerald",
+    sapphire:"Sapphire",
+    ruby:"Ruby",
+    diamond:"Diamond",
+    gold:"Gold Nugget"
+};
+
+const itemAliases = {
+    iron:["iron","irons","iorn","ion"],
+    coal:["coal","coals","col"],
+    clay:["clay","clays"],
+    copper:["copper","coppers","coppr","coper"],
+    zinc:["zinc","zincs","zin"],
+    sulfur:["sulfur","sulphur","sulfer","sulpher"],
+    nitrite:["nitrite","nitrites","nitrate","nitrie"],
+    limestone:["limestone","lime stone","limestones"],
+    rock:["rock","rocks","rok"],
+    rocksalt:["rock salt","rocksalt","rock salts","rocks salt"],
+
+    opal:["opal","opals","oppal"],
+    emerald:["emerald","emeralds","emerld","emerad","emrald"],
+    sapphire:["sapphire","sapphires","saphire","saphires","safire","sapfire"],
+    ruby:["ruby","rubies","rubi","rubys"],
+    diamond:["diamond","diamonds","diamon","diamons","diamnd"],
+    gold:["gold nugget","gold nuggets","gold","golds","goldnugget","goldnuggets","nugget","nuggets","gn","gns","nug"]
+};
 
 // CALCULATE EACH ITEM
 function calculateItem(item){
@@ -247,6 +358,151 @@ function loadPrices(){
     });
 }
 
+// FUZZY MATCHING
+function similarity(a, b){
+
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+
+    const matrix = [];
+
+    for(let i = 0; i <= b.length; i++){
+        matrix[i] = [i];
+    }
+
+    for(let j = 0; j <= a.length; j++){
+        matrix[0][j] = j;
+    }
+
+    for(let i = 1; i <= b.length; i++){
+        for(let j = 1; j <= a.length; j++){
+            if(b.charAt(i - 1) === a.charAt(j - 1)){
+                matrix[i][j] = matrix[i - 1][j - 1];
+            }else{
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+
+    const distance = matrix[b.length][a.length];
+    const maxLength = Math.max(a.length, b.length);
+
+    if(maxLength === 0) return 1;
+
+    return (maxLength - distance) / maxLength;
+}
+
+function findBestItemName(rawName){
+
+    rawName = rawName.toLowerCase().trim();
+
+    let bestItem = null;
+    let bestScore = 0;
+
+    for(const item in itemAliases){
+        itemAliases[item].forEach(alias => {
+            const score = similarity(rawName, alias);
+
+            if(score > bestScore){
+                bestScore = score;
+                bestItem = item;
+            }
+        });
+    }
+
+    if(bestScore >= 0.72){
+        return bestItem;
+    }
+
+    return null;
+}
+
+// PASTE ITEM LIST PARSER
+function parseItemText(){
+
+    const text = document.getElementById("itemText").value.toLowerCase();
+
+    if(text.trim() === ""){
+        document.getElementById("parseResult").innerHTML =
+            "Please paste or type an item list first.";
+        return;
+    }
+
+    items.forEach(item => {
+        document.getElementById(item+"Qty").value = 0;
+    });
+
+    const foundItems = {};
+    const unmatchedItems = [];
+
+    const cleanedText = text
+        .replace(/,/g, " ")
+        .replace(/\band\b/g, " ")
+        .replace(/\+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const patterns = [
+        /(\d+(?:\.\d+)?)\s+([a-z\s]+?)(?=\s+\d+|$)/g,
+        /([a-z\s]+?)\s*[x×]\s*(\d+(?:\.\d+)?)/g,
+        /[x×]\s*(\d+(?:\.\d+)?)\s+([a-z\s]+?)(?=\s+[x×]?\d+|$)/g
+    ];
+
+    patterns.forEach((pattern, index) => {
+        let match;
+
+        while((match = pattern.exec(cleanedText)) !== null){
+
+            let qty;
+            let rawName;
+
+            if(index === 1){
+                rawName = match[1].trim();
+                qty = parseFloat(match[2]) || 0;
+            }else{
+                qty = parseFloat(match[1]) || 0;
+                rawName = match[2].trim();
+            }
+
+            const item = findBestItemName(rawName);
+
+            if(item){
+                foundItems[item] = (foundItems[item] || 0) + qty;
+            }else if(rawName !== ""){
+                unmatchedItems.push(rawName);
+            }
+        }
+    });
+
+    for(const item in foundItems){
+        document.getElementById(item+"Qty").value = foundItems[item];
+    }
+
+    calculateTotal();
+
+    let resultMessage = "";
+
+    if(Object.keys(foundItems).length > 0){
+        resultMessage += "<strong>Detected:</strong> ";
+        resultMessage += Object.keys(foundItems)
+            .map(item => `${foundItems[item]} ${itemDisplayNames[item]}`)
+            .join(", ");
+    }else{
+        resultMessage += "No matching items found.";
+    }
+
+    if(unmatchedItems.length > 0){
+        resultMessage += "<br><strong>Could not read:</strong> ";
+        resultMessage += [...new Set(unmatchedItems)].join(", ");
+    }
+
+    document.getElementById("parseResult").innerHTML = resultMessage;
+}
+
 // SAVE ORES DROPDOWN OPEN/CLOSE STATE
 function setupOresDropdown(){
 
@@ -271,6 +527,10 @@ function init(){
             savePrices();
             calculateTotal();
         });
+    });
+
+    document.getElementById("itemText").addEventListener("input", () => {
+        parseItemText();
     });
 
     calculateTotal();
